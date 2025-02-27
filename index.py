@@ -1,6 +1,7 @@
 import json
 from time import sleep
 
+# Simple AI class
 class SimpleAI:
     def __init__(self):
         self.memory_file = "memory.json"  # File where we store memory
@@ -32,7 +33,7 @@ class SimpleAI:
 ai = SimpleAI()
 
 while True:
-    user_input = input("Ask something (type 'stop' to stop the AI): ")
+    user_input = input("Ask something (type 'stop' to stop the program): ")
 
     if user_input.lower() == "stop":
         try: # Try to save memory before shutting down
@@ -44,6 +45,7 @@ while True:
             sleep(3)
             print("[INFO] AI has been shut down.\n")
             print("[INFO] Clearing chat...")
+            sleep(3)
             print("\n\n\n\n\n\n")
             print("[INFO] Chat has been cleared.\n")
             print("[INFO] Stopping program.\n")
@@ -54,7 +56,7 @@ while True:
     response = ai.respond(user_input)
     
     if response == "No answer found.":
-        new_answer = input("AI: I don't know the answer yet :( Can you tell me?")
+        new_answer = input("AI: I don't know the answer yet. Can you tell me the answer? ")
         ai.learn(user_input, new_answer)
         print("AI: Thank you! I learned a new answer.")
     else:
