@@ -12,6 +12,9 @@ class SmartAI:
         self.memory = self.load_memory()
         self.engine = pyttsx3.init()
 
+        rate = self.engine.getProperty("rate")
+        self.engine.setProperty("rate", rate - 50) 
+
     def load_memory(self):
         try:
             with open(self.memory_file, "r") as file:
