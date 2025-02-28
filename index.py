@@ -1,63 +1,68 @@
 import json
-from time import sleep
+import pyttsx3
 
-# Simple AI class
-class SimpleAI:
+# Ainoastaan tämä käyttäjä ja PIN voivat opettaa AI:ta
+AUTHORIZED_USER = "admin"  # Vaihda haluamaksesi
+PIN_CODE = "1234"  # Vaihda haluamaksesi
+
+class SmartAI:
     def __init__(self):
-        self.memory_file = "memory.json"  # File where we store memory
-        self.memory = self.load_memory()  # Load memory on startup
+        self.memory_file = "memory.json"
+        self.memory = self.load_memory()
+        self.engine = pyttsx3.init()  # Alustetaan äänimoottori
 
     def load_memory(self):
-        """Load memory from file if it exists."""
         try:
             with open(self.memory_file, "r") as file:
-                return json.load(file)  # Load dictionary from file
+                return json.load(file)
         except (FileNotFoundError, json.JSONDecodeError):
-            return {}  # Return empty memory if file is missing or empty
+            return {}
 
     def save_memory(self):
-        """Save current memory to file."""
         with open(self.memory_file, "w") as file:
-            json.dump(self.memory, file, indent=4)  # Save as JSON
+            json.dump(self.memory, file, indent=4)
 
-    def learn(self, question, answer):
-        """Learn a new question-answer pair."""
-        self.memory[question.lower()] = answer  # Store in dictionary
-        self.save_memory()  # Save to file
+    def speak(self, text):
+        """Lukee vastauksen ääneen vain, jos se ei ole 'En tiedä vastausta'"""
+        if text != "En tiedä vastausta.":
+            self.engine.say(text)
+            self.engine.runAndWait()
+
+    def learn(self, question, answer, user, pin):
+        """Opettaa AI:lle uuden vastauksen vain, jos käyttäjänimi ja PIN ovat oikein"""
+        if user == AUTHORIZED_USER and pin == PIN_CODE:
+            self.memory[question.lower()] = answer
+            self.save_memory()
+            print("AI on oppinut uuden vastauksen!")
+            self.speak("Olen oppinut uuden vastauksen.")
+        else:
+            print("Väärä käyttäjänimi tai PIN-koodi! Et voi opettaa AI:ta.")
+            self.speak("Väärä käyttäjänimi tai PIN-koodi!")
 
     def respond(self, question):
-        """Respond based on learned memory."""
-        return self.memory.get(question.lower(), "No answer found.")
+        """Tarkistaa muistin ja vastaa, jos AI on oppinut vastauksen"""
+        question = question.lower()
+        if question in self.memory:
+            response = self.memory[question]
+        else:
+            response = "En tiedä vastausta."  # Muokattu selkeämmäksi
 
-# Testing AI
-ai = SimpleAI()
+        print("AI:", response)  # Tulostaa vastauksen aina
+        self.speak(response)  # Puhuu vain, jos vastaus ei ole "En tiedä vastausta."
+        return response
+
+ai = SmartAI()
 
 while True:
-    user_input = input("Ask something (type 'stop' to stop the program): ")
+    user_input = input("Kysy jotain (tai kirjoita 'opeta' lisätäksesi vastauksen, 'lopeta' poistuaksesi): ")
 
-    if user_input.lower() == "stop":
-        try: # Try to save memory before shutting down
-            print("\n[INFO] Saving memory...\n")
-            ai.save_memory() # Save memory to file
-            sleep(3)
-            print("[INFO] Memory saved successfully.\n") # Notify user
-            print("[INFO] Shutting down AI...\n") # Shutting down AI
-            sleep(3)
-            print("[INFO] AI has been shut down.\n")
-            print("[INFO] Clearing chat...")
-            sleep(3)
-            print("\n\n\n\n\n\n")
-            print("[INFO] Chat has been cleared.\n")
-            print("[INFO] Stopping program.\n")
-        except Exception as e:
-            print("\n[ERROR] Error saving memory: ", e + "\n") # Notify user if error occurs
+    if user_input.lower() == "lopeta":
         break
-
-    response = ai.respond(user_input)
-    
-    if response == "No answer found.":
-        new_answer = input("AI: I don't know the answer yet. Can you tell me the answer? ")
-        ai.learn(user_input, new_answer)
-        print("AI: Thank you! I learned a new answer.")
+    elif user_input.lower() == "opeta":
+        user = input("Käyttäjänimi: ")
+        pin = input("PIN-koodi: ")
+        question = input("Kirjoita kysymys: ")
+        answer = input("Kirjoita vastaus: ")
+        ai.learn(question, answer, user, pin)
     else:
-        print("AI:", response)
+        ai.respond(user_input)
